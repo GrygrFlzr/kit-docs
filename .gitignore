@@ -1,0 +1,8 @@
+.DS_Store
+.env
+node_modules
+/.svelte
+/build
+/functions
+/api
+/public

@@ -1,13 +1,11 @@
 {
     "public": false,
-    "cleanUrls": true,
-    "trailingSlash": false,
     "routes": [
         {
             "src": "/",
             "status": 302,
             "headers": {
-                "Location": "/learn/what-is-svelte-kit"
+                "Location": "/learn/what-is-sveltekit"
             }
         },
         { "handle": "filesystem" },

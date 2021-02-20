@@ -278,6 +278,31 @@ export async function get(req, context) {
 
 `delete` is a reserved word in JavaScript. To handle DELETE requests, export a function called `del` instead.
 
+Here is the type of a server route:
+
+```ts
+type ServerRoute = (
+    req: {
+        host: string;
+        path: string;
+        headers: Record<string, string>;
+        query: URLSearchParams;
+        body: undefined | Record<string, any>;
+        params: Record<string, unknown>;
+    },
+    context?: Record<string, any>
+) => Promise<{
+    headers?: Record<string, string>;
+    body?: Record<string, any> | Buffer;
+}>;
+```
+
+By default, a server route is expected to return a JSON body. The `body` return object will be JSON stringified by default. You can override this by including the `Content-Type` of the response in the `header` field.
+
+Unlike `load`, these functions will only operate on the server, so they operate as if they're in the context of a node server. You'll want to import `node-fetch` if you need to make API calls. You can also use node modules such as `fs` here.
+
+The `context` object is an optional arbitrary plain old JavaScript object which we'll define in our setup function.
+
 ## Error Page
 
 In addition to regular pages, this is a 'special' page that SvelteKit expects to find --- `src/routes/$error.svelte`. This will be shown when an error occurs while rendering a page.

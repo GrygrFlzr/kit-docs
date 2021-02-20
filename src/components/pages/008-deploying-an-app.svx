@@ -1,0 +1,123 @@
+---
+title: Deploying an App
+description: A dive into SvelteKit's build process and adapters
+---
+
+<script>
+    import Infobox from '$components/Infobox.svelte';
+</script>
+
+# {title}
+
+```bash
+npm run build
+```
+
+This will build your application into the `.svelte/build` folder. Under the hood, it uses the `svelte-kit build` CLI.
+
+It performs two steps:
+
+1. Transforms your source into a client app and some server chunks
+2. Produces an optimized build
+
+```bash
+npm run start
+```
+
+This will start your application from the `.svelte/build/optimized` folder and run it as a node application. Under the hood, it uses the `svelte-kit start` CLI.
+
+## Adapters
+
+Adapters take your optimized build and transform them into a platform-specific format. You can specify which adapter you want to use from `svelte.config.cjs`.
+
+```js
+const sveltePreprocess = require('svelte-preprocess');
+module.exports = {
+    // ...
+    kit: {
+        // By default, `npm run build` will create a standard Node app.
+        // You can create optimized builds for different platforms by
+        // specifying a different adapter
+        adapter: '@sveltejs/adapter-node',
+
+        // ...
+    },
+};
+```
+
+And then running the adapt command using the CLI:
+
+```bash
+npx svelte-kit adapt
+```
+
+(use `not-svelte-kit` on Windows)
+
+Most of these are broken at the time of writing, but nevertheless it's still interesting to cover them. There have also been talks of an AWS or Deno adapter, although those have not materialized yet.
+
+The adapter API is still in flux and may break adapters.
+
+Make sure to install the `next` distribution of these, not the `latest` ones. e.g.
+
+```bash
+npm i -D @sveltejs/adapter-static@next
+```
+
+### `@sveltejs/adapter-static`
+
+Status: **Working** (mostly)
+
+This adapter produces a static build. For Sapper users, this is SvelteKit's equivalent to `sapper export`. If you don't need dynamic routing, this easily produces the most portable build, and can be deployed on many different services.
+
+Do note that your setup script containing `prepare` and `getSession` from the previous section will effectively be hardcoded into the resulting application.
+
+### `@sveltejs/adapter-node`
+
+Status: **Broken** due to using `require` in an ESM script.
+
+This adapter produces a node build inside `build`. It provides nice conveniences such as network compression.
+
+### `@sveltejs/adapter-vercel`
+
+Status: **Broken** due to using an `import` statement in a CJS context.
+
+This adapter produces a Vercel build at `.vercel_build_output`.
+
+### `@sveltejs/adapter-netlify`
+
+Status: **Broken** due to using an `import` statement in a CJS context.
+
+This adapter produces a Netlify build. It expects a `netlify.toml` configuration at your root that looks like this:
+
+```toml
+[build]
+    command = "npm run build"
+    publish = "build"       # directory containing static files
+    functions = "functions" # directory containing serverless function
+```
+
+### `@sveltejs/adapter-begin`
+
+Status: **Broken** due to using trying to use an old SvelteKit adapter API, which has since been changed.
+
+This adapter produces a Begin build.
+
+## Future Considerations
+
+You're done! This is the current state of SvelteKit. It's definitely not ready for release yet, but it's good to keep up with how it's going.
+
+At the moment, the way Snowpack works is blocking [SSR imports of Svelte component libraries](https://github.com/snowpackjs/snowpack/discussions/1808), so it may not necessarily stay in the long term. Whatever solution is used to replace it is likely to keep the aspect of unbundled development. There are currently unreleased experiments to see if SvelteKit can make use of Vite, but that is a recent development and has not yet been published.
+
+You should still use Sapper for your current production stuff. As you've seen, SvelteKit is not a pain to migrate to, and you can think of it as the next evolution to Sapper.
+
+<div class="text-right">
+    <a href="./everything">
+        Finally: Literally Everything
+    </a>
+</div>
+
+<style>
+    :global(.language-toml .table) {
+        @apply inline;
+    }
+</style>

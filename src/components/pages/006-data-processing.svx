@@ -1,0 +1,202 @@
+---
+title: Data Processing
+description: Handling dynamic data in SvelteKit
+---
+
+<script>
+    import Infobox from '$components/Infobox.svelte';
+</script>
+
+# {title}
+
+## Page loads and the module context
+
+Up till now we've been using the normal `<script>` tag to execute our JavaScript. But SvelteKit routes have a special use of `<script context="module">`. You may be familiar with this tag from either Sapper or the Svelte tutorial.
+
+Let's take a look at what you can do during a page load.
+
+```html
+<script context="module">
+    export async function load(params : RouteParams): RouteReturn;
+</script>
+```
+
+This is a large function we'll need to break down.
+
+## Load function parameters
+
+```ts
+type RouteParams = {
+    fetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+    session: Record<string, any>;
+    page: {
+        host: string;
+        path: string;
+        params?: Record<string, string>;
+        query: URLSearchParams;
+    };
+    context: Record<string, any>;
+};
+```
+
+This will look familiar to Sapper users; it is the evolution of [Sapper's `preload` function](https://sapper.svelte.dev/docs#Preloading).
+
+<Infobox>
+    <span slot="title">
+        Can I reference API keys here?
+    </span>
+    <p>
+        Don't! Anything in <code>load</code> can be run in both the server and the client. Any secrets should be handled in server-side routes, which we'll cover shortly.
+    </p>
+</Infobox>
+
+### `fetch`
+
+This function is equivalent to the native `fetch` web API, but can be used across both client and server contexts. The fetch request will include credentials from cookies.
+
+If you've fetched data on the server side, the request won't be repeated on the client side. SvelteKit inserts a `<script type="svelte-data">` tag at the end of your pages corresponding with the results of the fetch, which means the client-side fetch can just look up the DOM element to simulate the fetch request.
+
+### `session`
+
+A plain JavaScript object containing session information from our server. You may remember this from the `session` store inside `$app/stores`.
+
+### `page`
+
+A plain JavaScript object containing information about the current page. Pretty much the non-store version of the `page` store from `$app/stores`, and has the same signature.
+
+### `context`
+
+A plain JavaScript object containing context information from our server. This will be covered in the next section.
+
+## Load function return object
+
+```ts
+type RouteReturn = Promise<{
+    status?: number;
+    /**
+     * use new Error() to generate this
+     */
+    error?: Error;
+    /**
+     * only implemented for SSR for now, not client-side
+     */
+    redirect?: {
+        to: string;
+        status: number;
+    };
+    context?: Record<string, any>;
+    /**
+     * seconds before cleared from cache
+     */
+    maxage?: number;
+    props?: Record<string, any>;
+} | void>;
+```
+
+All of these fields are optional.
+
+### `status`
+
+The HTTP status code.
+
+### `error`
+
+An `Error` instance. If you want to respond with a 404, for example, you could do:
+
+```js
+export async function load() {
+    /* some logic... */
+    return {
+        status: 404,
+        error: new Error('Not found'),
+    };
+}
+```
+
+### `redirect`
+
+Lets you perform a server side redirect:
+
+```js
+export async function load() {
+    /* some logic... */
+    return {
+        redirect: {
+            to: '/new/path',
+            status: 302,
+        },
+    };
+}
+```
+
+### `context`
+
+You can pass in an arbitrary context object to be used by the page.
+
+### `maxage`
+
+The number of seconds to cache the response of `load`.
+
+### `props`
+
+Lets you pass arbitrary props to the page. This can even be a Svelte component.
+
+## Server Side Routes
+
+Aside from serving `.svelte` pages and assets, you can also create server endpoints that server JSON or other kinds of data in JavaScript. For example, an endpoint at `src/routes/test.js` would be served at [http://localhost:3000/test](http://localhost:3000/test)
+
+<Infobox>
+    <span slot="title">
+        Can I use TypeScript?
+    </span>
+    <p>
+        Absolutely! As long you have SvelteKit set up for it, you can write your routes fully in TypeScript. Use the <code>.ts</code> file extension instead.
+    </p>
+</Infobox>
+
+```ts
+export const get: ServerRoute;
+export const head: ServerRoute;
+export const post: ServerRoute;
+export const put: ServerRoute;
+export const del: ServerRoute;
+export const options: ServerRoute;
+export const patch: ServerRoute;
+```
+
+Technically speaking, any functions you declare here will be assumed to correspond to some sort of HTTP method by their name, so this is not an exhaustive list. The only special case is `del`, which corresponds to the `DELETE` HTTP method, as `delete` is a reserved keyword in JavaScript.
+
+Let's unpack the type of `ServerRoute`.
+
+```ts
+type ServerRoute = (
+    req: {
+        host: string;
+        path: string;
+        headers: Record<string, string>;
+        query: URLSearchParams;
+        body: undefined | Record<string, any>;
+        params: Record<string, unknown>;
+    },
+    context?: Record<string, any>
+) => Promise<{
+    headers?: Record<string, string>;
+    body?: Record<string, any> | Buffer;
+}>;
+```
+
+Sapper users will find a number of changes here. As SvelteKit supports deployment to serverless platforms, its server route function is more agnostic and does not assume an express.js application.
+
+By default, a server route is expected to return a JSON body. The `body` return object will be JSON stringified by default. You can override this by including the `Content-Type` of the response in the `header` field.
+
+You may notice the lack of a `fetch` function. Unlike `load`, these functions will only operate on the server, so they operate as if they're in the context of a node server. You'll want to import `node-fetch` if you need to make API calls. You can also use node modules such as `fs` here.
+
+The `context` object is an optional arbitrary plain old JavaScript object which we'll define in our setup function.
+
+The constant references to server side sessions and contexts brings us to the next section. The concepts should be familiar to those who used Sapper in a long-running server context.
+
+<div class="text-right">
+    <a href="./setting-the-context">
+        Next: Setting the Context
+    </a>
+</div>

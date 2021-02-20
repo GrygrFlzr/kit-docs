@@ -1,0 +1,53 @@
+---
+title: Setting the Context
+description: Context and session setup in SvelteKit
+---
+
+<script>
+    import Infobox from '$components/Infobox.svelte';
+</script>
+
+# {title}
+
+We've been emphasizing the serverless context that we're operating in. There's one more trick SvelteKit introduces in order to achieve most of what you want to do in a long-running server environment.
+
+Create a new file at `src/setup/index.js` (or `index.ts` if you're using TypeScript). This file exposes two functions.
+
+```ts
+export async function prepare(
+    // Request headers
+    headers: Record<string, string>
+): Promise<{
+    // Response headers
+    headers?: Record<string, string>;
+    // Arbitrary context object
+    // passed down to routes and getSession
+    context?: Record<string, any>;
+}>;
+
+export async function getSession(
+    // Passed from prepare above
+    context: Record<string, any>
+): Promise<
+    // Arbitrary session object, passed down to routes
+    Record<string, any>
+>;
+```
+
+These functions never run on the client side, and are appropriate places to do stuff like authentication and session management. Since you're in a node context, you can also import node modules.
+
+This is **_not_** a long-running server and should not be treated as one. Each route request is independent to one another, you probably don't want to boot up an entire Express server in here.
+
+### `prepare`
+
+This should be where you handle stuff like authentication tokens. You have access to request headers, so you can also access HTTP-only cookies. `prepare` will be run right before any of your route logic.
+
+### `getSession`
+
+This is where you can set up the contents of your arbitrary session object/store. It will be called before your page routes are rendered. As you've seen earlier, you can access this in the `load` function of a route, or as a store.
+
+<div class="text-right">
+    <a href="./deploying-an-app">
+        Next: Deploying an App
+    </a>
+</div>

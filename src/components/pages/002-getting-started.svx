@@ -1,0 +1,189 @@
+---
+title: Getting Started
+description: Initializing a SvelteKit project
+---
+
+<script>
+    import Counter from '$components/Counter.svelte';
+    import Infobox from '$components/Infobox.svelte';
+</script>
+
+# {title}
+
+And Rich Harris said, ["Let there be SvelteKit,"](https://svelte.dev/blog/whats-the-deal-with-sveltekit) and there was SvelteKit.
+
+Make sure you've got **Node 14 LTS** installed!
+
+Let's create a new SvelteKit project in a new `svelte-kit-app` directory, which immediately greets us with a big red warning sign:
+
+```bash
+npm init svelte@next svelte-kit-app
+```
+
+```
+npx: installed 1 in 1.793s
+
+create-svelte version 2.0.0-next.27
+
+█████████  ███████████    ███████    ███████████  ███
+███░░░░░███░█░░░███░░░█  ███░░░░░███ ░░███░░░░░███░███
+░███    ░░░ ░   ░███  ░  ███     ░░███ ░███    ░███░███
+░░█████████     ░███    ░███      ░███ ░██████████ ░███
+░░░░░░░░███    ░███    ░███      ░███ ░███░░░░░░  ░███
+███    ░███    ░███    ░░███     ███  ░███        ░░░
+░░█████████     █████    ░░░███████░   █████        ███
+░░░░░░░░░     ░░░░░       ░░░░░░░    ░░░░░        ░░░
+
+Pump the brakes! A little disclaimer...
+
+svelte@next is not ready for use yet. It definitely can't
+run your apps, and it might not run at all.
+
+We haven't yet started accepting community contributions,
+and we don't need people to start raising issues yet.
+
+Given these warnings, please feel free to experiment, but
+you're on your own for now. We'll have something to show
+soon.
+
+✔ Copied project files
+```
+
+As it might suggest - this is not recommended.
+
+-   Some stuff is broken.
+-   No official docs.
+-   No support.
+
+With that in mind, let's proceed.
+
+```
+? Use TypeScript in components? » (y/N)
+```
+
+Our first branch asks if we want TypeScript support. This is totally optional, even if you say yes. Let's install it with TypeScript for now. Your `<script>` tags are still JavaScript by default.
+
+```
+✔ Added TypeScript support.
+To use it inside Svelte components, add lang="ts" to the attributes of a script tag.
+
+? What do you want to use for writing Styles in Svelte components?
+» - Use arrow-keys. Return to submit.
+>   CSS
+    Less
+    SCSS
+```
+
+We can add Less or SCSS support later. Let's go with good ol' CSS for now.
+
+```
+You can add support for CSS preprocessors like SCSS/Less/PostCSS later.
+
+Next steps:
+  1: cd svelte-kit-app
+  2: npm install (or pnpm install, or yarn)
+  3: npm run dev -- --open
+
+To close the dev server, hit Ctrl-C
+
+Stuck? Visit us at https://svelte.dev/chat
+```
+
+Ignore the last line - no official support yet, remember? We should definitely follow the suggested **Next steps** though!
+
+About half of you will be stuck on step 3:
+
+```bash
+npm run dev
+```
+
+```
+> svelte-kit-app@0.0.1 dev C:\\svelte-kit-app
+> svelte-kit dev
+
+Only file and data URLs are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'
+Error [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only file and data URLs are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'
+    at Loader.defaultResolve [as _resolve] (internal/modules/esm/resolve.js:782:11)
+    at Loader.resolve (internal/modules/esm/loader.js:86:40)
+    at Loader.getModuleJob (internal/modules/esm/loader.js:230:28)
+    at Loader.import (internal/modules/esm/loader.js:165:28)
+    at importModuleDynamically (internal/modules/esm/translators.js:114:35)
+    at exports.importModuleDynamicallyCallback (internal/process/esm_loader.js:30:14)
+```
+
+<Infobox>
+    <span slot="title">
+        Why did it break?
+    </span>
+    <p>
+        SvelteKit recently moved to using ESM imports internally, but it's importing using a string instead of a proper <a href="https://nodejs.org/api/url.html#url_url_pathtofileurl_path">File URL</a>. This <em>sort of</em> works on POSIX environments, but <em>definitely</em> not on Windows.
+    </p>
+</Infobox>
+
+That's why we've built the `not-svelte-kit` wrapper around the CLI, [available on NPM](https://www.npmjs.com/package/not-svelte-kit), to fix bugs like these while we wait for official support.
+
+```bash
+npm i -D not-svelte-kit
+```
+
+We'll also need to update our `package.json` scripts to use the wrapper:
+
+```jsonc
+{
+    "name": "svelte-kit-app",
+    "version": "0.0.1",
+    "scripts": {
+        "dev": "not-svelte-kit dev",
+        "build": "not-svelte-kit build",
+        "start": "not-svelte-kit start"
+    }
+    /* ... */
+}
+```
+
+_Now_ we should be able to run the dev server.
+
+```bash
+npm run dev
+```
+
+```
+> svelte-kit-app@0.0.1 dev C:\\svelte-kit-app
+> not-svelte-kit dev
+
+[snowpack] ! building dependencies...
+[snowpack] ✔ dependencies ready! [0.40s]
+  http://localhost:3001
+  Server started in 468ms.
+
+
+> Listening on http://localhost:3000
+[@snowpack/plugin-typescript]
+[@snowpack/plugin-typescript] 12:20:12 AM - Starting compilation in watch mode...
+[@snowpack/plugin-typescript] 12:20:13 AM - Found 0 errors. Watching for file changes.
+```
+
+<Infobox>
+    <span slot="title">
+        Wait, two ports?
+    </span>
+    <p>
+        Port 3000 serves our application, but port 3001 is also open. This is a WebSocket server which will notify our browser of any changes to our source files, so that it can load the changes in real-time. It will only be enabled on dev mode.
+    </p>
+</Infobox>
+
+## Hot Module Reloading
+
+Now that you've got the dev server running, head over to [http://localhost:3000](http://localhost:3000) to check out the page. The default SvelteKit page with a Counter element will greet you:
+
+<div class="text-center">
+    <Counter />
+</div>
+
+You can play around with `src/routes/index.svelte` or `src/components/Counter.svelte` and see the changes live!
+
+<div class="text-right">
+    <a href="./navigating-your-app">
+        Next: Navigating your app
+    </a>
+</div>

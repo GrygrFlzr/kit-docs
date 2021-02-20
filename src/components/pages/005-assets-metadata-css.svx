@@ -1,0 +1,62 @@
+---
+title: Assets, Metadata, and CSS
+description: Importing and styling in SvelteKit
+---
+
+<script>
+    import Infobox from '$components/Infobox.svelte';
+</script>
+
+# {title}
+
+You can still use the usual `<svelte:head>` tag in order to change the title of the page. Unlike normal Svelte, this has server-side rendering support.
+
+```svelte
+<svelte:head>
+    <title>Welcome</title>
+</svelte:head>
+```
+
+You can also import stylesheets directly, and they'll be applied on to the page.
+
+```js
+import '$components/mysheet.css';
+```
+
+## Svelte Adders
+
+With a PostCSS plugin, you can even import stylesheets with other extensions, such as `.pcss`, `.scss`, and `.less`.
+
+Let's add PostCSS functionality now using an **adder**: an experimental composable command to add functionality to your SvelteKit project.
+
+We'll need to start with a fresh kit.
+
+```bash
+# create a new SvelteKit project in the current directory
+npm init svelte@next
+
+# apply the PostCSS adder
+npx apply svelte-add/postcss
+```
+
+You can now:
+
+-   Use PostCSS in your `<style>` blocks
+-   Use PostCSS in `.pcss` files
+-   Install more PostCSS plugins
+-   Apply other Svelte Adders, like `npx apply svelte-add/tailwindcss`
+
+<Infobox>
+    <span slot="title">
+        Why `svelte-add` and not `sveltejs`?
+    </span>
+    <p>
+        This is a community experiment to add integrations! `npx apply` uses GitHub repositories, not NPM. You can check out the list of adders <a href="https://github.com/svelte-add/svelte-adders">here</a>!
+    </p>
+</Infobox>
+
+<div class="text-right">
+    <a href="./data-processing">
+        Next: Data Processing
+    </a>
+</div>

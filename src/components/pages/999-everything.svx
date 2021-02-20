@@ -1,0 +1,877 @@
+---
+title: SvelteKit API
+description: A comprehensive API documentation for SvelteKit
+---
+
+<script>
+    import Infobox from '$components/Infobox.svelte';
+</script>
+
+# {title}
+
+<Infobox>
+    <span slot="title">
+        Will this change in the future?
+    </span>
+    <p>
+        Probably! It's pre-alpha without official documentation for a reason. As you've already seen, some stuff is broken and require workarounds to use.
+    </p>
+</Infobox>
+
+## Initialization
+
+TypeScript support comes out of the box.
+
+```bash
+npm init svelte@next my-app
+# answer yes to TypeScript
+
+cd my-app
+npm install -D not-svelte-kit
+npm install
+npm run dev
+```
+
+You can also add a line to `tsconfig.json` for better type-completion:
+
+```diff
+        "paths": {
++           "$app/*": ["./.svelte/assets/runtime/app/*"],
+            "$components/*": ["./src/components/*"]
+        }
+```
+
+The `.svelte` folder will be generated after you've run dev or build at least once.
+
+## Application Structure
+
+```
+├ package.json
+├ src
+│ ├ routes
+│ │ ├ # your routes here
+│ │ ├ $error.svelte
+│ │ ├ $layout.svelte
+│ │ └ index.svelte
+│ ├ components
+│ │ ├ # your components here
+│ │ └ Counter.svelte
+│ ├ setup
+│ │ └ index.js
+│ ├ app.html
+│ └ globals.d.ts
+├ static
+│ ├ # your static files here
+│ ├ favicon.ico
+│ └ robots.txt
+├ snowpack.config.cjs
+└ svelte.config.cjs
+```
+
+When you first run SvelteKit, it will create an additional `.svelte` directory containing generated files.
+
+## package.json
+
+Your project is configured with `"type": "module"` and you can use ESM imports everywhere. Always start install modules in dev dependencies unless you need them in the server context (e.g. server routes), in which case you'll want to move them to normal dependencies.
+
+It will start out with the following scripts:
+
+-   `npm run dev` --- Start the application in development mode, watching source file for changes and swapping modules whenever possible.
+-   `npm run build` --- Build the app for production mode
+-   `npm start` --- Start the app in production mode
+
+All of the above scripts use the `svelte-kit` CLI under the hood. One more useful CLI command is:
+
+-   `npx svelte-kit adapt` --- Adapt the app to a specific platform
+
+## src
+
+This contains the entry points for your application.
+
+## src/app.html
+
+This file is a template for responses from the server. SvelteKit will inject content that replaces the following tags:
+
+-   `%svelte.head%` --- HTML representing page-specific `<head>` contents, like `<title>`
+-   `%svelte.body% --- HTML representing the body of the page being rendered
+
+## src/globals.d.ts
+
+Includes helper types for a better development experience. You can take advantage of this even if you write everything in JavaScript.
+
+## src/setup/index.js
+
+Your setup script run before all pages and server routes.
+
+## src/routes
+
+Your pages and server routes.
+
+## src/components
+
+A directory to place your components in, accessible via the `$components` alias. For example, `src/components/Counter.svelte` is accessible via `$components/Counter.svelte` no matter what directory you're importing from.
+
+## static
+
+This is a place to put any files that your app uses --- fonts, images, and so on. For example `static/favicon.ico` would be served as `/favicon.ico`.
+
+## snowpack.config.cjs
+
+SvelteKit currently uses Snowpack to (un)bundle your app. You probably won't need to change the config, but if you want to (for example to add new loaders or plugins), you can. By default, this extends `@sveltejs/snowpack-config`, but you can always un-extend if needed.
+
+Be aware that `@sveltejs/snowpack-config` marks all Node builtins and your `package.json` dependencies as `external`, and Snowpack will not be able to locate these from client side contexts.
+
+Check out the [Snowpack config reference](https://www.snowpack.dev/reference/configuration) for more details.
+
+## svelte.config.cjs
+
+Configuration options for SvelteKit.
+
+```ts
+type exports = {
+    preprocess: Preprocessor[];
+    compilerOptions?: {
+        /* ... */
+    };
+    kit: {
+        adapter: string;
+        target: string;
+        appDir?: string;
+        paths?: {
+            base?: string;
+        };
+        prerender?: {
+            force: boolean;
+        };
+    };
+};
+```
+
+### preprocess
+
+A list of preprocessors. Consult https://github.com/sveltejs/svelte-preprocess for more information about preprocessors.
+
+### compilerOptions
+
+Svelte compiler options. Check the [Svelte compiler options](https://svelte.dev/docs#svelte_compile) for details.
+
+### kit
+
+Configuration for SvelteKit itself.
+
+### kit.adapter
+
+Specifies which adapter to use when `svelte-kit adapt` is run.
+
+### kit.target
+
+The DOM element to target inside `src/app.html`
+
+### kit.appDir and kit.paths.base
+
+Sometimes your SvelteKit application is not located at the root of your host, or you'd like to have your assets stored in a different location. These let you change those locations.
+
+### kit.prerender.force
+
+An option to specify whether pre-render errors should stop the adapt process (default, false) or it should be logged and then ignored.
+
+---
+
+## Routing
+
+There are two types of routes in SvelteKit --- pages, and server routes.
+
+### Pages
+
+Pages are Svelte components written in `.svelte` files. First visits are served a server-rendered version of the route in question, and then hydrated via JavaScript. A client side router is initialized and takes over navigation afterwards.
+
+The filename determines the route.
+
+-   `/` --- `src/routes/index.svelte`
+-   `/about` --- `src/routes/about.svelte` or `src/routes/about/index.svelte`
+
+Dynamic parameters are encoded using `[brackets]`. For example, you could create a page that renders a blog post:
+
+```svelte
+<!-- src/routes/blog/[slug].svelte -->
+<script context="module">
+    export async function load({ fetch, page }) {
+        // the `slug` parameter is available because this file
+        // is called [slug].svelte
+        const { slug } = page.params;
+
+        // use a wrapper `fetch` that allows
+        // you to make credentialled requests on both
+        // server and client
+        const res = await fetch(`blog/${slug}.json`);
+        const article = await res.json();
+
+        return {
+            props: {
+                article,
+            }
+        };
+    }
+</script>
+
+<script>
+    export let article;
+</script>
+
+<svelte:head>
+    <title>{article.title}</title>
+</svelte:head>
+
+<h1>{article.title}</h1>
+
+<div class='content'>
+    {@html article.html}
+</div>
+```
+
+If you want to capture more params, you can create nested folders using the same naming convention: `[slug]/[language]`.
+
+If you don't want to create several folders to capture more than one parameter like `[year]/[month]/...`, or if the number of parameters is dynamic, you can use a spread route parameter. For example, instead of individually capturing `/blog/[slug]/[year]/[month]/[day]`, you can create a file for `/blog/[...slug].svelte` and extract the params like so:
+
+```svelte
+<!-- src/routes/blog/[...slug].svelte -->
+<script context="module">
+    export async function load({ page }) {
+        let [slug, year, month, day] = page.params.slug;
+
+        return { slug, year, month, day };
+    }
+</script>
+```
+
+## Server Routes
+
+Server routes are modules written in `.js` files that export functions corresponding to HTTP methods. Each function recieves a request and context objects as arguments. This is useful for creating a JSON API. For example, here's how you could create an endpoint that served the blog page above:
+
+```js
+// routes/blog/[slug].json.js
+import db from './_database.js';
+// the underscore tells SvelteKit this isn't a route
+
+export async function get(req, context) {
+    // the `slug` parameter is available because this file
+    // is called [slug].json.js
+    const { slug } = req.params;
+
+    const article = await db.get(slug);
+
+    if (article !== null) {
+        return {
+            body: {
+                article,
+            },
+        };
+    } else {
+        return {
+            body: {
+                error: 'Not found',
+            },
+        };
+    }
+}
+```
+
+`delete` is a reserved word in JavaScript. To handle DELETE requests, export a function called `del` instead.
+
+## Error Page
+
+In addition to regular pages, this is a 'special' page that SvelteKit expects to find --- `src/routes/$error.svelte`. This will be shown when an error occurs while rendering a page.
+
+The `error` object is made available to the template along with the HTTP `status` code.
+
+## Regexes in routes
+
+You can use a subset of regular expressions to qualify route parameters, by placing them in parentheses after the parameter name.
+
+For example, `src/routes/items/[id([0-9]+)].svelte` would only match numeric IDs — `/items/123` would match and make the value `123` available in `page.params.id`, but `/items/xyz` would not match.
+
+Because of technical limitations, the following characters cannot be used: `/`, `\`, `?`, `:`, `(` and `)`.
+
+## Navigation API
+
+The `$app/navigation` module contains functions for controlling SvelteKit programmatically and responding to events.
+
+## goto(href, options)
+
+-   `href` --- The page to go to
+-   `opts.replaceState` --- determines whether to use `history.pushState` or `history.replaceState`
+-   `opts.noscroll` --- prevents scroll to top after navigation
+
+Programmatically navigates to the given `href`. SvelteKit will handle the navigation if the destination is a SvelteKit route.
+
+Returns a `Promise` that resolves when the navigation is complete. This can be used to perform actions once the navigation has completed, such as updating a database, store, etc.
+
+## prefetch(href)
+
+-   href --- the page to prefetch
+
+Programmatically prefetches the given page
+
+-   ensures that the code for the page is loaded
+-   calls the page's `load` method with the appropriate options.
+
+This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with `rel="prefetch"`.
+
+Returns a `Promise` that resolves when the prefetch is complete.
+
+## prefetchRoutes(routes?)
+
+-   `routes` --- an optional array of strings representing routes to prefetch
+
+Programmatically prefetches the code for routes that haven't yet been fetched.
+
+Omitting arguments will cause all routes to be fetched, or you can specify routes by any matching pathname such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`). Unlike `prefetch`, this won't call `load` for individual pages.
+
+Returns a `Promise` that resolves when the routes have been prefetched.
+
+---
+
+## Preloading
+
+Page components can define a `load` function that runs before the component is created. It is called when a page is laoded and is typically used to load data that the page depends on. This avoids the user seeing the page update as it loads, as is typically the case with client-side loading.
+
+This is the SvelteKit equivalent to:
+
+-   `preload` in Sapper
+-   `getInitialProps` in Next.js
+-   `asyncData` in Nuxt.js
+
+Note that `load` will run both on the server side and on the client side. You should avoid using APIs that are only present in the browser or in node, although when required it is possible to branch your logic using `if (typeof window === 'undefined')`.
+
+The following code shows how to load a blog post and pass it to the page in the `article` prop:
+
+```svelte
+<!-- src/routes/blog/[slug].svelte -->
+<script context="module">
+    export async function load({ fetch, page }) {
+        const { slug } = page.params;
+
+        const res = await fetch(`blog/${slug}.json`);
+        const article = await res.json();
+
+        return {
+            props: {
+                article,
+            }
+        };
+    }
+</script>
+
+<script>
+    export let article;
+</script>
+
+<h1>{article.title}</h1>
+```
+
+The routing section describes how the dynamic parameter `slug` works.
+
+The `load` function should be defined in a context="module" script since it is not part of the component instance itself -- it runs before the component has been created. See the [Svelte tutorial](https://svelte.dev/tutorial/module-exports) for more on the module context.
+
+## Load function parameters
+
+```ts
+type RouteParams = {
+    fetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+    session: Record<string, any>;
+    page: {
+        host: string;
+        path: string;
+        params?: Record<string, string>;
+        query: URLSearchParams;
+    };
+    context: Record<string, any>;
+};
+```
+
+### `fetch`
+
+This function is equivalent to the native `fetch` web API, but can be used across both client and server contexts. The fetch request will include credentials from cookies.
+
+If you've fetched data on the server side, the request won't be repeated on the client side. SvelteKit inserts a `<script type="svelte-data">` tag at the end of your pages corresponding with the results of the fetch, which means the client-side fetch can just look up the DOM element to simulate the fetch request.
+
+### `session`
+
+A plain JavaScript object containing session information from our server. Also available as the `session` store inside `$app/stores`. `session` can be used to pass data from the server related to the current request, e.g. the current user. By default it is `undefined`.
+
+### `page`
+
+A plain JavaScript object containing information about the current page. Also available as the `page` store inside `$app/stores`.
+
+### `context`
+
+A plain JavaScript object containing context information from our server.
+
+## Load function return object
+
+```ts
+type RouteReturn = Promise<{
+    status?: number;
+    /**
+     * use new Error() to generate this
+     */
+    error?: Error;
+    /**
+     * only implemented for SSR for now, not client-side
+     */
+    redirect?: {
+        to: string;
+        status: number;
+    };
+    context?: Record<string, any>;
+    /**
+     * seconds before cleared from cache
+     */
+    maxage?: number;
+    props?: Record<string, any>;
+} | void>;
+```
+
+All of these fields are optional.
+
+### `status`
+
+The HTTP status code.
+
+### `error`
+
+An `Error` instance. If you want to respond with a 404, for example, you could do:
+
+```js
+export async function load() {
+    /* some logic... */
+    return {
+        status: 404,
+        error: new Error('Not found'),
+    };
+}
+```
+
+### `redirect`
+
+Lets you perform a server side redirect:
+
+```js
+export async function load() {
+    /* some logic... */
+    return {
+        redirect: {
+            to: '/new/path',
+            status: 302,
+        },
+    };
+}
+```
+
+### `context`
+
+You can pass in an arbitrary context object to be used by the page.
+
+### `maxage`
+
+The number of seconds to cache the response of `load`.
+
+### `props`
+
+Lets you pass arbitrary props to the page. This can even be a Svelte component.
+
+---
+
+## Layouts
+
+In many apps, there are elements that should be visible on every page, such as top-level navigation or a footer. Instead of repeating them in every page, we can use layout components.
+
+To create a layout component that applies to every page, make a file called `src/routes/$layout.svelte`. The default layout component (the one that SvelteKit uses if you don't bring your own) looks like this...
+
+```svelte
+<slot />
+```
+
+...but we can add whatever markup, styles and behaviour we want. For example, let's add a nav bar:
+
+```svelte
+<nav>
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+    <a href="/settings">Settings</a>
+</nav>
+
+<slot />
+```
+
+The navigation bar will always be visible, and clicking between the three pages will not replace the `<nav>`.
+
+### Nested Routes and Layouts
+
+Suppose we don't just have a single `/settings` page, but instead have nested pages like `/settings/profile` and `/settings/notifications` with a shared submenu (for a real-life example, see https://github.com/settings).
+
+We can create a layout that only applies to pages below `/settings` while inheriting the root layout with the top-level nav:
+
+```svelte
+<!-- src/routes/settings/$layout.svelte -->
+<h1>Settings</h1>
+
+<div class="submenu">
+    <a href="settings/profile">Profile</a>
+    <a href="settings/notifications">Notifications</a>
+</div>
+
+<slot />
+```
+
+Unlike Sapper, SvelteKit layout components do not receive a `segment` property. To style the current path, we can instead use `page` store from `$app/stores`:
+
+```diff
++<script>
++    import { page } from '$app/stores';
++</script>
++
+ <div class="submenu">
+-    <a href="settings/profile">Profile</a>
+-    <a href="settings/notifications">Notifications</a>
++    <a
++        class:selected={$page.path.endsWith("profile")}
++        href="settings/profile"
++    >Profile</a>
++
++    <a
++        class:selected={$page.path.endsWith("notifications")}
++        href="settings/notifications"
++    >Notifications</a>
+ </div>
+```
+
+---
+
+## Server-Side Rendering
+
+SvelteKit will render any component first on the server side and send it to the client as HTML. It will then run the component again on the client side to allow it to update based on dynamic data. This means you need to ensure that components can run both on the client and server side.
+
+If, for example, your components try to access the global variables `document` or `window`, this will result in an error when the page is pre-rendered on the server side.
+
+If you need access to these variables, you can run code exclusively on the client side by wrapping it in
+
+```js
+if (typeof window !== 'undefined') {
+    // client-only code here
+}
+```
+
+Alternatively, you can run it `onMount` (see below).
+
+### Third-party libraries that depend on `window`
+
+Sometimes libraries have implicit dependencies on `window`. A third-party library might come bundled in a way which allows it to work with multiple different module loaders. This code might check for the existence of `window.global` and therefore depend on `window`.
+
+Since SvelteKit will try to execute your component on the server side -- where there is no window -- importing such a module will cause the component to fail. You will get an error message saying `ReferenceError: window is not defined`.
+
+To solve this, you can load the library by importing it in the `onMount` function, which is only called on the client. Since this is a dynamic import you need to use `await import`.
+
+```svelte
+<script>
+    import { onMount } from 'svelte';
+
+    let MyComponent;
+
+    onMount(() => {
+        (async () => {
+            const {
+                default: _module
+            } = await import('my-non-ssr-component');
+            MyComponent = _module;
+        })();
+    });
+</script>
+
+<svelte:component this={MyComponent} foo="bar" />
+```
+
+<Infobox>
+    <span slot="title">
+        Can I pass an async function directly to onMount?
+    </span>
+    <p>
+        You <em>could</em>, but it's not recommended. Since you can pass a destructor function as the return type of onMount, you should keep the passed function synchronous and call an async function instead, like the Immediately-Invoked Function Expression (IIFE) above.
+    </p>
+</Infobox>
+
+Snowpack currently cannot load Svelte component libraries as SSR. In those cases, you'll also have to import them in onMount or copy the files to your source. Single-component modules should still work, with some support from the component author.
+
+---
+
+## Stores
+
+The `page` and `session` values passed to `load` functions are available to components as [stores](https://svelte.dev/tutorial/writable-stores), along with `navigating`.
+
+A component can retrieve the stores directly from `$app/stores`:
+
+```js
+import {
+    page, session, navigating, getStores, stores
+} = '$app/stores';
+```
+
+-   `page` contains read-only information about the current route. See [preloading](#preloading) for details.
+-   `session` can be used to pass server-side data related to the current context. It is a [writable store](https://svelte.dev/tutorial/writable-stores), meaning you can update it with new data. If, for example, you populate the session with the current user on the server, you can update the store when the user logs in. Your components will refresh to reflect the new state.
+-   `navigating` is SvelteKit's equivalent to Sapper's `preloading` store. It contains a read-only boolean value indicating whether or not a navigation is pending.
+
+### Seeding session data
+
+`session` is `undefined` by default. To populate it with data, we need to implement a function that returns session data given an HTTP request in our setup script.
+
+```ts
+// src/setup/index.js OR src/setup/index.ts
+export async function prepare(
+    headers: Record<string, string>
+): Promise<{
+    headers?: Record<string, string>;
+    context?: Record<string, any>;
+}>;
+
+export async function getSession(
+    context: Record<string, any>
+): Promise<Record<string, any>>;
+```
+
+The `prepare` function receives request headers from the current request. You can optionally return response headers and a context object passed to server routes (for example, `src/routes/api.js`).
+
+The `getSession` function receives the `context` object defined in `prepare`. You can optionally return session data to be passed down to your pages.
+
+The session data must be serializable. This means it must not contain functions or custom classes, just built-in JavaScript data types.
+
+Note that `prepare` and `getSession` will be re-awaited for on **every** server-rendered page route.
+
+As an example, let's look at how to populate the session with the current user.
+
+```js
+import cookie from 'cookie';
+import jwt from 'jsonwebtoken';
+
+export async function prepare(headers) {
+    const { token } = cookie.parse(headers.cookie);
+    const user = token ? jwt.decode(token) : false;
+
+    return {
+        context: {
+            authenticated: !!user,
+            user,
+        },
+    };
+}
+
+export async function getSession(context) {
+    return context;
+}
+```
+
+---
+
+## Link options
+
+### `sveltekit:prefetch`
+
+SvelteKit uses code splitting to break your app into small chunks (one per route), ensuring fast startup times.
+
+For dynamic routes, such as our `src/routes/blog/[slug].svelte` example, that's not enough. In order to render the blog post, we need to fetch the data for it, and we can't do that until we know what `slug` is. In the worst case, that could cause lag as the browser waits for the data to come back from the server.
+
+We can mitigate that by _prefetching_ the data. Adding a `sveltekit:prefetch` attribute to a link...
+
+```svelte
+<a sveltekit:prefetch href="/learn/what-is-sveltekit">
+    What is SvelteKit?
+</a>
+```
+
+...will cause SvelteKit to run the page's `load` function as soon as the user hovers over the link (on a desktop) or touches it (on mobile), rather than waiting for the click event to trigger navigation. Typically, this buys us an extra couple of hundred milliseconds, which is the difference between a user interface that feels laggy, and one that feels snappy.
+
+### `rel="external"`
+
+By default, the SvelteKit runtime intercepts clicks on `<a>` elements and bypasses the normal browser navigation for relative (same-origin) URLs that match one of your page routes. We sometimes need to tell SvelteKit that certain links need to be be handled by normal browser navigation.
+
+Adding a `rel="external"` attribute to a link...
+
+```svelte
+<a rel="external" href="path">
+    Path
+</a>
+```
+
+...will trigger a browser navigation when the link is clicked.
+
+### `sveltekit:noscroll`
+
+When navigating to internal links, SvelteKit will change the scroll position to 0,0 so that the user is at the very top left of the page. When a hash is defined, it will scroll to the element with a matching ID.
+
+In certain cases, you may wish to disable this behaviour. Adding a `sveltekit:noscroll` attribute to a link...
+
+```svelte
+<a sveltekit:noscroll href="path">
+    Path
+</a>
+```
+
+...will prevent scrolling after the link is clicked.
+
+---
+
+## Building
+
+Up until now we've been using `svelte-kit dev` to build our application and run a development server. But when it comes to production, we want to create a self-contained optimized build.
+
+### svelte-kit build
+
+This command packages up your application into the `.svelte/build` directory. The unoptimized step is done with Snowpack, the optimization step is done using Rollup.
+
+### svelte-kit start
+
+This command runs your build output as a Node app. You can pass two options to it:
+
+-   `--port $PORT` --- Set the port that the application runs on. Defaults to port `3000`.
+-   `--open` --- Opens a browser tab on launch (defaults to false)
+
+### svelte-kit adapt
+
+This command packages your build output into a platform-specific format. The command will use the adapter defined in your `svelte.config.cjs` file. For example, you can use `@sveltejs/adapter-static` to "export" your site, or `@sveltejs/adapter-vercel` to deploy to Vercel as a serverless app.
+
+```js
+// svelte.config.cjs
+// ...
+module.exports = {
+    // ...
+    kit: {
+        adapter: '@sveltejs/adapter-node',
+        // ...
+    },
+    // ...
+};
+```
+
+For more details on the current state of various adapters, consult the [Deploying an App](./deploying-an-app) page.
+
+## Using the static adapter
+
+Many sites are effectively static, which is to say they don't actually need an Express server or lambda functions backing them. Instead, they can be hosted and served as static files, which allows them to be deployed to more hosting environments (such as Netlify or Github Pages). Static sites are generally cheaper to operate and have better performance characteristics.
+
+Using `@sveltejs/adapter-static` allows you to _export_ a static site with `svelte-kit adapt`. In fact, you're looking at an exported site right now!
+
+Static doesn't mean non-interactive -- your Svelte components work exactly as they do normally, and you still get all the benefits of client-side routing and prefetching.
+
+### When not to use the static adapter
+
+For an app to be exportable as a static app, any two users hitting the same page of your app must get the same content from the server. In other words, any app that involves user sessions or authentication is _not_ a candidate for `@sveltejs/adapter-static`.
+
+Note that you can still export apps with dynamic routes, like our `src/routes/blog/[slug].svelte` example from earlier. `@sveltejs/adapter-static` will intercept `fetch` requests made inside `load`, so the data served from `src/routes/blog/[slug].json.js` will also be captured. You'll need whatever service you're running on to handle URL rewrites and point them to the right file, though.
+
+Note that query strings have no effect on statically-exported pages. Support for dynamic routes is also a bit broken right now.
+
+---
+
+## Deployment
+
+I have no idea what the minimum supported Node version is for `svelte-kit start` (no support!), but keep in mind:
+
+-   You need ESM imports
+-   ESM imports are non-experimental since Node 12 LTS
+
+It's best to run in a Node 14 LTS environment, regardless.
+
+### Deploying a Node app
+
+You can either use `svelte-kit start` or adapt using `@sveltejs/adapter-node` (the latter of which is currently broken).
+
+`@sveltejs/adapter-node` will produce a `build` folder. You will need `@sveltejs/kit` to be available at production inside `node_modules` to run the adapted build.
+
+Since the default SvelteKit Snowpack configuration currently marks all production dependencies as `external`, you will need to unextend your `snowpack.config.cjs` and manually exclude it from the `external` field and then move it to your production dependencies:
+
+```js
+// snowpack.config.cjs
+module.exports = {
+    packageOptions: {
+        // always include Svelte in your project
+        knownEntrypoints: ['svelte'],
+        // ignore `import fs from 'fs' etc
+        external: [
+            ...require('module').builtinModules,
+            ...Object.keys(
+                pkg.dependencies.filter(
+                    (module) => module !== '@sveltejs/kit'
+                ) || {}
+            ),
+        ],
+    },
+    plugins: [
+        [
+            '@snowpack/plugin-svelte',
+            {
+                compilerOptions: {
+                    hydratable: true,
+                },
+                configFilePath: 'svelte.config.cjs',
+            },
+        ],
+        '@snowpack/plugin-typescript',
+    ],
+    devOptions: {
+        open: 'none',
+        output: 'stream',
+    },
+    buildOptions: {
+        sourcemap: true,
+    },
+    mount: {
+        '.svelte/assets': `/${process.env.SVELTE_KIT_APP_DIR}/assets`,
+        'src/components': '/_components',
+    },
+    alias: {
+        $app: './.svelte/assets/runtime/app',
+        $components: './src/components',
+    },
+};
+```
+
+### Deploying to Vercel or Netlify
+
+`@sveltejs/adapter-vercel` produces a Vercel build at `.vercel_build_output`.
+
+`@sveltejs/adapter-netlify` produces a Netlify build. It expects a `netlify.toml` configuration at your root that looks like this:
+
+```toml
+[build]
+    command = "npm run build"
+    publish = "build"       # directory containing static files
+    functions = "functions" # directory containing serverless function
+```
+
+---
+
+## Service Workers?
+
+SvelteKit does not come with out-of-the-box service workers, due to issues with cache invalidation and the fact that localhost shares all service workers you've ever run on the domain. It does not stop you from implementing your own, however.
+
+---
+
+## Base URLs
+
+Ordinarily, the root of your SvelteKit app is served at `/`. But in some cases, your app may need to be served from a different base path -- for example, if SvelteKit only controls part of your domain, or if you have multiple SvelteKit apps living side-by-side.
+
+This can be configured in `svelte.config.cjs`:
+
+```js
+// svelte.config.cjs
+// ...
+module.exports = {
+    // ...
+    kit: {
+        paths: {
+            base: '/my-base-path',
+        },
+        // ...
+    },
+    // ...
+};
+```

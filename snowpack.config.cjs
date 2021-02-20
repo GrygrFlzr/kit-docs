@@ -3,15 +3,14 @@ const path = require('path');
 const pkg = require(path.join(process.cwd(), 'package.json'));
 
 // Consult https://www.snowpack.dev to learn about these options
+/** @type {import("snowpack").SnowpackUserConfig } */
 module.exports = {
     packageOptions: {
         // always include Svelte in your project
         knownEntrypoints: ['svelte'],
         // ignore `import fs from 'fs'` etc
         external: [
-            ...require('module').builtinModules.filter(
-                (module) => module !== 'process'
-            ),
+            ...require('module').builtinModules,
             ...Object.keys(pkg.dependencies || {}),
         ],
     },

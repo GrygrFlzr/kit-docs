@@ -1,0 +1,171 @@
+---
+title: Convenience Toolbox
+description: SvelteKit's application toolbox
+---
+
+<script>
+    import Infobox from '$components/Infobox.svelte';
+    import { navigating, page, session } from '$app/stores';
+</script>
+
+# {title}
+
+`$components` is not the only alias provided out of the box. Let's inspect the `$app` alias.
+
+```js
+/**
+ * Boolean values about our current environment
+ */
+import {
+    // are we on the server, or the client?
+    browser,
+    // are we in dev mode, or production?
+    dev,
+    // are we in AMP mode?
+    amp,
+} from '$app/env';
+```
+
+### `browser`
+
+Since our routes can be rendered on both the server and the client, sometimes there's a need to know whether we're in a client context or a server context.
+
+### `dev`
+
+Sometimes you want to behave differently in dev and in production. You might want to show stacktraces in development mode, for example.
+
+### `amp`
+
+Whether we're in a limited environment of Accelerated Mobile Pages.
+
+```js
+/**
+ * Navigation Functions
+ */
+import {
+    // Move to another page!
+    goto,
+    // Prefetch a page before the user gets there
+    prefetch,
+    // Prefetch multiple pages
+    prefetchRoutes,
+} from '$app/navigation';
+```
+
+```ts
+async function goto(
+    // the location to go to
+    href: string,
+    opts?: {
+        // don't scroll when navigating to a new page
+        noscroll: boolean = false;
+        // replace the top of the browser history stack
+        replaceState: boolean = false;
+    }
+): Promise<void>;
+```
+
+As the name implies, `goto` lets you programmatically navigate to a page.
+
+```ts
+function prefetch(
+    // the relative route to prefetch
+    href: string
+): Promise<void>;
+
+async function prefetchRoutes(
+    // an optional list of routes to prefetch
+    pathnames?: string[]
+): Promise<unknown[]>;
+```
+
+The `prefetch` function:
+
+-   Loads the code for the requested page
+-   Calls the page's `load` function (we'll check it out later)
+-   Resolves after it finishes prefetching
+
+You can also trigger prefetch on a link hover using `<a rel="prefetch">`.
+
+The `prefetchRoutes` function:
+
+-   By default, prefetches routes that the client hasn't fetched yet, to speed up navigation
+-   You can optionally pass in a list of routes you want to be prefetched
+-   Will _not_ call the `load` function of each page, unlike `prefetch`
+-   Resolves after all requested routes are prefetched
+
+```js
+import { assets, base } from '$app/paths';
+```
+
+These correspond to the `assets` and `base` path you've set in your `svelte.config.cjs`.
+
+```js
+/**
+ * Stores
+ */
+import {
+    // a function to get access to navigating, page, or session
+    getStores,
+    // The current navigation status
+    navigating,
+    // Information about the current page
+    page,
+    // session information - we'll get to this later
+    session,
+    // deprecated - use getStores() or the other three directly
+    stores,
+} from '$app/stores';
+```
+
+```ts
+function getStores();
+```
+
+This gets you access to the `navigating`, `page`, and `session` stores. It's the same one `$app/stores` already exports. I presume it exists as a migration path for Sapper users.
+
+`stores` is the same thing, but deprecated.
+
+```ts
+const navigating: Readable<boolean | null>;
+```
+
+For Sapper users, `stores().preloading` is deprecated and replaced by the `navigating` store.
+
+```ts
+const page: Readable<{
+    // the current host e.g. localhost:3000
+    host: string;
+    // the current path e.g. /some/path/here
+    path: string;
+    // Query parameters e.g. ?q=1234
+    query: Record<string, string>;
+    // Parameters for dynamic routes, e.g. src/routes/[:id].svelte
+    params: Record<string, string>;
+}>;
+```
+
+The `page` store gives you information about the current page and where you are.
+
+```ts
+const session: Writable<undefined | Record<string, any>>;
+```
+
+This store contains session information from our server. It's up to us to define its initial contents later! Notice that unlike the other stores, it is writable.
+
+<Infobox>
+    <span slot="title">
+        I thought we were serverless?
+    </span>
+    <p>
+        To support serverless environments, this session state is processed on every request. There's no node server holding on to data across requests.
+    </p>
+    <p>
+        We'll take a look at this later.
+    </p>
+</Infobox>
+<div class="text-right">
+    <a href="./assets-metadata-css">
+        Next: Assets, Metadata, and CSS
+    </a>
+</div>

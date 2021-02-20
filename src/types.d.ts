@@ -40,6 +40,7 @@ declare type ServerRoute = (
     },
     context?: Record<string, any>
 ) => Promise<{
+    status?: number;
     headers?: Record<string, string>;
     body?: Record<string, any> | Buffer | DataView;
 }>;

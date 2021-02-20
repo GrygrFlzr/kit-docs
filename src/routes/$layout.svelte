@@ -18,10 +18,14 @@
         <div
             class="container mx-auto py-6 px-3 md:pl-7 grid grid-cols-2 items-center"
         >
-            <h1 class="uppercase text-3xl font-medium tracking-wider">
+            <h1
+                class="uppercase text-2xl sm:text-3xl font-medium tracking-wider"
+            >
                 <a href="/" class="inline-flex items-center">
-                    <img class="h-16" alt="Logo" src="/logo.png" />
-                    <span class="ml-1 pt-2 text-gray-700">SK Incognito</span>
+                    <img class="h-12 sm:h-16" alt="Logo" src="/logo.png" />
+                    <span class="ml-1 pt-2 text-gray-700 whitespace-nowrap"
+                        >SK Incognito</span
+                    >
                 </a>
             </h1>
             <div class="justify-self-end">

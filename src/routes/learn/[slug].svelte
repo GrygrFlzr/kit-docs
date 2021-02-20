@@ -1,46 +1,13 @@
 <script context="module">
     // @ts-check
+    import { dev } from '$app/env';
     const slugRegex = /^(?:\d{3}-)([a-z-]+)(?:\.svx)$/;
-
-    const markdownPages = {
-        'what-is-sveltekit': import(
-            '$components/pages/001-what-is-sveltekit.svx'
-        ),
-        'getting-started': import('$components/pages/002-getting-started.svx'),
-        'navigating-your-app': import(
-            '$components/pages/003-navigating-your-app.svx'
-        ),
-        'convenience-toolbox': import(
-            '$components/pages/004-convenience-toolbox.svx'
-        ),
-        'assets-metadata-css': import(
-            '$components/pages/005-assets-metadata-css.svx'
-        ),
-        'data-processing': import('$components/pages/006-data-processing.svx'),
-        'setting-the-context': import(
-            '$components/pages/007-setting-the-context.svx'
-        ),
-        'deploying-an-app': import(
-            '$components/pages/008-deploying-an-app.svx'
-        ),
-        everything: import('$components/pages/999-everything.svx'),
-    };
 
     /**
      * @type { RouteLoad }
      */
     export async function load({ page, session }) {
         const { slug } = page.params;
-
-        // workaround for static adapter
-        if (slug === 'index') {
-            return {
-                redirect: {
-                    to: '/learn/what-is-sveltekit',
-                    status: 302,
-                },
-            };
-        }
 
         /**
          * @type { { title: string, description: string, filename: string }[] }
@@ -52,10 +19,18 @@
 
         if (slug in slugs) {
             // file found, render mdsvex
-            // const { default: Rendered } = await import(
-            //     `/_components/_pages/${slugs[slug].filename}`
-            // );
-            const { default: Rendered } = await markdownPages[slug];
+            // dirty hack to work with optimized bundle
+            let piece1 = '.';
+            let piece2 = '.';
+            let piece3 = '.';
+            if (dev) {
+                piece1 = '../../..';
+                piece2 = '_components';
+                piece3 = 'pages';
+            }
+            const { default: Rendered } = await import(
+                `./${piece1}/${piece2}/${piece3}/${slugs[slug].filename}.js`
+            );
             return {
                 props: {
                     title: slugs[slug].title,

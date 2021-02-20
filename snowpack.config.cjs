@@ -13,6 +13,9 @@ module.exports = {
             ...require('module').builtinModules,
             ...Object.keys(pkg.dependencies || {}),
         ],
+        rollup: {
+            plugins: [require('@rollup/plugin-dynamic-import-vars')],
+        },
     },
     plugins: [
         [

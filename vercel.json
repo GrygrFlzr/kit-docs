@@ -2,14 +2,14 @@
     "public": false,
     "cleanUrls": true,
     "trailingSlash": false,
-    "redirects": [
-        {
-            "source": "/",
-            "destination": "/learn/what-is-sveltekit",
-            "permanent": false
-        }
-    ],
     "routes": [
+        {
+            "src": "/",
+            "status": 302,
+            "headers": {
+                "Location": "/learn/what-is-svelte-kit"
+            }
+        },
         { "handle": "filesystem" },
         { "src": "/(.*)", "status": 404, "dest": "/404/index.html" }
     ]

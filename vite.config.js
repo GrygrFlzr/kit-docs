@@ -5,8 +5,7 @@ import { resolve } from 'path';
 const config = {
     resolve: {
         alias: {
-            $components: resolve('src/components'),
-            $app: resolve('.svelte/assets/runtime/app')
+            $components: resolve('src/components')
         }
     },
     build: {

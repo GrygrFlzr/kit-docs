@@ -11,7 +11,8 @@ const config = {
     },
     build: {
         sourcemap: true
-    }
+    },
+    css: {postcss: "./"}
 };
 
 export default config

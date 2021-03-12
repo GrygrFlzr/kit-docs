@@ -27,7 +27,6 @@ npm init svelte@next my-app
 # answer yes to TypeScript
 
 cd my-app
-npm install -D not-svelte-kit
 npm install
 npm run dev
 ```
@@ -36,7 +35,10 @@ You can also add a line to `tsconfig.json` for better type-completion:
 
 ```diff
         "paths": {
-+           "$app/*": ["./.svelte/assets/runtime/app/*"],
++           "$app/*": [
++               ".svelte/dev/runtime/app/*",
++               ".svelte/build/runtime/app/*"
++           ],
             "$components/*": ["./src/components/*"]
         }
 ```

@@ -75,7 +75,7 @@
 
 <style>
     .modal-blocker {
-        @apply absolute inset-0 bg-gray-900 opacity-20 z-40;
+        @apply fixed inset-0 bg-gray-900 opacity-20 z-40;
     }
     button {
         @apply relative;

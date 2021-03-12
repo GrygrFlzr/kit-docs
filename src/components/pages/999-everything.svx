@@ -64,7 +64,7 @@ The `.svelte` folder will be generated after you've run dev or build at least on
 │ ├ # your static files here
 │ ├ favicon.ico
 │ └ robots.txt
-├ snowpack.config.cjs
+├ vite.config.js
 └ svelte.config.cjs
 ```
 
@@ -115,13 +115,11 @@ A directory to place your components in, accessible via the `$components` alias.
 
 This is a place to put any files that your app uses --- fonts, images, and so on. For example `static/favicon.ico` would be served as `/favicon.ico`.
 
-## snowpack.config.cjs
+## vite.config.js
 
-SvelteKit currently uses Snowpack to (un)bundle your app. You probably won't need to change the config, but if you want to (for example to add new loaders or plugins), you can. By default, this extends `@sveltejs/snowpack-config`, but you can always un-extend if needed.
+SvelteKit currently uses Vite to (un)bundle your app. You probably won't need to change the config, but if you want to (for example to add new plugins), you can.
 
-Be aware that `@sveltejs/snowpack-config` marks all Node builtins and your `package.json` dependencies as `external`, and Snowpack will not be able to locate these from client side contexts.
-
-Check out the [Snowpack config reference](https://www.snowpack.dev/reference/configuration) for more details.
+Check out the [Vite config reference](https://vitejs.dev/config/) for more details.
 
 ## svelte.config.cjs
 
@@ -445,10 +443,7 @@ type RouteReturn = Promise<{
     /**
      * only implemented for SSR for now, not client-side
      */
-    redirect?: {
-        to: string;
-        status: number;
-    };
+    redirect?: string;
     context?: Record<string, any>;
     /**
      * seconds before cleared from cache
@@ -486,10 +481,8 @@ Lets you perform a server side redirect:
 export async function load() {
     /* some logic... */
     return {
-        redirect: {
-            to: '/new/path',
-            status: 302,
-        },
+        status: 307,
+        redirect: '/new/path',
     };
 }
 ```
@@ -626,8 +619,6 @@ To solve this, you can load the library by importing it in the `onMount` functio
     </p>
 </Infobox>
 
-Snowpack currently cannot load Svelte component libraries as SSR. In those cases, you'll also have to import them in onMount or copy the files to your source. Single-component modules should still work, with some support from the component author.
-
 ---
 
 ## Stores
@@ -749,10 +740,6 @@ In certain cases, you may wish to disable this behaviour. Adding a `sveltekit:no
 
 Up until now we've been using `svelte-kit dev` to build our application and run a development server. But when it comes to production, we want to create a self-contained optimized build.
 
-### svelte-kit build
-
-This command packages up your application into the `.svelte/build` directory. The unoptimized step is done with Snowpack, the optimization step is done using Rollup.
-
 ### svelte-kit start
 
 This command runs your build output as a Node app. You can pass two options to it:
@@ -760,9 +747,11 @@ This command runs your build output as a Node app. You can pass two options to i
 -   `--port $PORT` --- Set the port that the application runs on. Defaults to port `3000`.
 -   `--open` --- Opens a browser tab on launch (defaults to false)
 
-### svelte-kit adapt
+### svelte-kit build
 
-This command packages your build output into a platform-specific format. The command will use the adapter defined in your `svelte.config.cjs` file. For example, you can use `@sveltejs/adapter-static` to "export" your site, or `@sveltejs/adapter-vercel` to deploy to Vercel as a serverless app.
+This command packages up your application into the `.svelte/build` directory, and then also attempts to run your specified adapter.
+
+The command will use the adapter defined in your `svelte.config.cjs` file. For example, you can use `@sveltejs/adapter-static` to "export" your site, or `@sveltejs/adapter-vercel` to deploy to Vercel as a serverless app.
 
 ```js
 // svelte.config.cjs
@@ -811,54 +800,6 @@ It's best to run in a Node 14 LTS environment, regardless.
 You can either use `svelte-kit start` or adapt using `@sveltejs/adapter-node` (the latter of which is currently broken).
 
 `@sveltejs/adapter-node` will produce a `build` folder. You will need `@sveltejs/kit` to be available at production inside `node_modules` to run the adapted build.
-
-Since the default SvelteKit Snowpack configuration currently marks all production dependencies as `external`, you will need to unextend your `snowpack.config.cjs` and manually exclude it from the `external` field and then move it to your production dependencies:
-
-```js
-// snowpack.config.cjs
-module.exports = {
-    packageOptions: {
-        // always include Svelte in your project
-        knownEntrypoints: ['svelte'],
-        // ignore `import fs from 'fs' etc
-        external: [
-            ...require('module').builtinModules,
-            ...Object.keys(
-                pkg.dependencies.filter(
-                    (module) => module !== '@sveltejs/kit'
-                ) || {}
-            ),
-        ],
-    },
-    plugins: [
-        [
-            '@snowpack/plugin-svelte',
-            {
-                compilerOptions: {
-                    hydratable: true,
-                },
-                configFilePath: 'svelte.config.cjs',
-            },
-        ],
-        '@snowpack/plugin-typescript',
-    ],
-    devOptions: {
-        open: 'none',
-        output: 'stream',
-    },
-    buildOptions: {
-        sourcemap: true,
-    },
-    mount: {
-        '.svelte/assets': `/${process.env.SVELTE_KIT_APP_DIR}/assets`,
-        'src/components': '/_components',
-    },
-    alias: {
-        $app: './.svelte/assets/runtime/app',
-        $components: './src/components',
-    },
-};
-```
 
 ### Deploying to Vercel or Netlify
 

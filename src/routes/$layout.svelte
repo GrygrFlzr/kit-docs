@@ -1,6 +1,6 @@
 <script>
     import 'prismjs-tomorrow-theme/prism-tomorrow.css';
-    import './_global.pcss';
+    import './_global.css';
     import { session } from '$app/stores';
     import Nav from '$components/Nav.svelte';
 </script>

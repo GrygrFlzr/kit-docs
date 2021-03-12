@@ -80,10 +80,7 @@ type RouteReturn = Promise<{
     /**
      * only implemented for SSR for now, not client-side
      */
-    redirect?: {
-        to: string;
-        status: number;
-    };
+    redirect?: string;
     context?: Record<string, any>;
     /**
      * seconds before cleared from cache
@@ -121,10 +118,8 @@ Lets you perform a server side redirect:
 export async function load() {
     /* some logic... */
     return {
-        redirect: {
-            to: '/new/path',
-            status: 302,
-        },
+        status: 307,
+        redirect: '/new/path',
     };
 }
 ```

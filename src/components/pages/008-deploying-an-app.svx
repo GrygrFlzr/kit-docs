@@ -15,10 +15,11 @@ npm run build
 
 This will build your application into the `.svelte/build` folder. Under the hood, it uses the `svelte-kit build` CLI.
 
-It performs two steps:
+It performs three steps:
 
 1. Transforms your source into a client app and some server chunks
 2. Produces an optimized build
+3. Runs the specified adapter
 
 ```bash
 npm run start
@@ -45,15 +46,13 @@ module.exports = {
 };
 ```
 
-And then running the adapt command using the CLI:
+And then running the build command using the CLI:
 
 ```bash
-npx svelte-kit adapt
+npx svelte-kit build
 ```
 
-(use `not-svelte-kit` on Windows)
-
-Most of these are broken at the time of writing, but nevertheless it's still interesting to cover them. There have also been talks of an AWS or Deno adapter, although those have not materialized yet.
+There have also been talks of an AWS or Deno adapter, although those have not materialized yet.
 
 The adapter API is still in flux and may break adapters.
 
@@ -65,7 +64,7 @@ npm i -D @sveltejs/adapter-static@next
 
 ### `@sveltejs/adapter-static`
 
-Status: **Working** (mostly)
+Status: **Working**
 
 This adapter produces a static build. For Sapper users, this is SvelteKit's equivalent to `sapper export`. If you don't need dynamic routing, this easily produces the most portable build, and can be deployed on many different services.
 
@@ -73,19 +72,19 @@ Do note that your setup script containing `prepare` and `getSession` from the pr
 
 ### `@sveltejs/adapter-node`
 
-Status: **Broken** due to using `require` in an ESM script.
+Status: **Working**
 
 This adapter produces a node build inside `build`. It provides nice conveniences such as network compression.
 
 ### `@sveltejs/adapter-vercel`
 
-Status: **Broken** due to using an `import` statement in a CJS context.
+Status: **Working**
 
 This adapter produces a Vercel build at `.vercel_build_output`.
 
 ### `@sveltejs/adapter-netlify`
 
-Status: **Broken** due to using an `import` statement in a CJS context.
+Status: **Working**
 
 This adapter produces a Netlify build. It expects a `netlify.toml` configuration at your root that looks like this:
 
@@ -98,15 +97,13 @@ This adapter produces a Netlify build. It expects a `netlify.toml` configuration
 
 ### `@sveltejs/adapter-begin`
 
-Status: **Broken** due to using trying to use an old SvelteKit adapter API, which has since been changed.
+Status: **Broken**
 
 This adapter produces a Begin build.
 
 ## Future Considerations
 
 You're done! This is the current state of SvelteKit. It's definitely not ready for release yet, but it's good to keep up with how it's going.
-
-At the moment, the way Snowpack works is blocking [SSR imports of Svelte component libraries](https://github.com/snowpackjs/snowpack/discussions/1808), so it may not necessarily stay in the long term. Whatever solution is used to replace it is likely to keep the aspect of unbundled development. There are currently unreleased experiments to see if SvelteKit can make use of Vite, but that is a recent development and has not yet been published.
 
 You should still use Sapper for your current production stuff. As you've seen, SvelteKit is not a pain to migrate to, and you can think of it as the next evolution to Sapper.
 

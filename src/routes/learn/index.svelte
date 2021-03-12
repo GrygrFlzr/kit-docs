@@ -5,10 +5,8 @@
      */
     export async function load() {
         return {
-            redirect: {
-                to: '/learn/what-is-sveltekit',
-                status: 302,
-            },
+            status: 307,
+            redirect: '/learn/what-is-sveltekit',
         };
     }
 </script>

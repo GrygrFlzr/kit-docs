@@ -1,6 +1,4 @@
 <script context="module">
-    // @ts-check
-    import { dev } from '$app/env';
     const slugRegex = /^(?:\d{3}-)([a-z-]+)(?:\.svx)$/;
 
     /**
@@ -18,19 +16,21 @@
         );
 
         if (slug in slugs) {
-            // file found, render mdsvex
-            // dirty hack to work with optimized bundle
-            let piece1 = '.';
-            let piece2 = '.';
-            let piece3 = '.';
-            if (dev) {
-                piece1 = '../../..';
-                piece2 = '_components';
-                piece3 = 'pages';
-            }
-            const { default: Rendered } = await import(
-                `./${piece1}/${piece2}/${piece3}/${slugs[slug].filename}.js`
+            const pages = Object.fromEntries(
+                await Promise.all(
+                    Object.entries(
+                        import.meta.glob('/src/components/pages/*.svx')
+                    ).map(async ([path, page]) => {
+                        const { default: Rendered } = await page();
+                        const filename = path.split('/').pop();
+                        const slug = filename.match(slugRegex)[1];
+                        return [slug, Rendered];
+                    })
+                )
             );
+
+            const Rendered = pages[slug];
+
             return {
                 props: {
                     title: slugs[slug].title,

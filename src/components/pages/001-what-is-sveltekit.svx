@@ -13,7 +13,7 @@ SvelteKit is an upcoming app framework built around Svelte.
 
 As the next evolution to Sapper, it inherits much of its functionality such as file-based routing, Server Side Rendering, and TypeScript support.
 
-SvelteKit also focuses on unbundled development with Snowpack and takes on serverless as a first class build target. Unlike bundlers such as Rollup or Webpack, Snowpack takes advantage of ES Module support in modern browsers and builds each module individually, on-demand, allowing for fast development times and Hot Module Reloading no matter how large your application grows.
+SvelteKit also focuses on unbundled development with Vite and takes on serverless as a first class build target. Unlike bundlers such as Rollup or Webpack, Vite takes advantage of ES Module support in modern browsers and builds each module individually, on-demand, allowing for fast development times and Hot Module Reloading no matter how large your application grows.
 
 Unlike Sapper, it makes no assumptions about the existence of a server environment, and its use of a new concept called **adapters** allows it to build targets for serverless platforms such as Vercel, Netlify, Begin, and more. That doesn't mean you can't build a node server - it just lets you pick that middleground between a fully static site and a fully dynamic site.
 

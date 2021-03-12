@@ -130,7 +130,7 @@ Let's include it in our layout. Like `Counter`, we can import it using a special
 <!-- styles -->
 ```
 
-This `$components` path is an alias to your `src/components` folder, and remains consistent no matter how deep in your folders you go. Some of the magic is powered by Snowpack, which you can check out in your `snowpack.config.cjs` file.
+This `$components` path is an alias to your `src/components` folder, and remains consistent no matter how deep in your folders you go. Some of the magic is powered by Vite, which you can check out in your `vite.config.cjs` file.
 
 ## Error Pages
 

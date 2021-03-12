@@ -2,9 +2,8 @@ const colors = require('tailwindcss/colors');
 const { tailwindExtractor } = require('tailwindcss/lib/lib/purgeUnusedStyles');
 
 module.exports = {
-    darkMode: 'class',
     purge: {
-        content: ['./src/**/*.html', './src/**/*.svelte'],
+        content: ['./src/**/*.html', './src/**/*.svelte', './src/**/*.svx'],
         options: {
             defaultExtractor: (content) => [
                 // This is an internal Tailwind function that we're not supposed to be allowed to use

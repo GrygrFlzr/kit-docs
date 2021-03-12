@@ -1,9 +1,17 @@
-<script>
-    import { goto } from '$app/navigation';
-    import { onMount } from 'svelte';
-    onMount(() => {
-        goto('/learn/what-is-sveltekit');
-    });
+<script context="module">
+    // @ts-check
+    /**
+     * @type { RouteLoad }
+     */
+    export async function load() {
+        return {
+            status: 307,
+            redirect: '/learn/what-is-sveltekit',
+        };
+    }
 </script>
 
-<a href="/learn/what-is-sveltekit">this is just here as a workaround</a>
+<script>
+    import { goto } from '$app/navigation';
+    goto('/learn/what-is-sveltekit');
+</script>

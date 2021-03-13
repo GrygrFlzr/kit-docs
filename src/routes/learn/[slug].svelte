@@ -1,4 +1,6 @@
 <script context="module">
+    export const prerender = true;
+
     const slugRegex = /^(?:\d{3}-)([a-z-]+)(?:\.svx)$/;
 
     /**

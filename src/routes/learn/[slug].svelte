@@ -20,13 +20,13 @@
         if (slug in slugs) {
             const pages = Object.fromEntries(
                 await Promise.all(
-                    Object.entries(
-                        import.meta.glob('/src/components/pages/*.svx')
-                    ).map(async ([path, page]) => {
-                        const filename = path.split('/').pop();
-                        const slug = filename.match(slugRegex)[1];
-                        return [slug, page];
-                    })
+                    Object.entries(import.meta.glob('/src/pages/*.svx')).map(
+                        async ([path, page]) => {
+                            const filename = path.split('/').pop();
+                            const slug = filename.match(slugRegex)[1];
+                            return [slug, page];
+                        }
+                    )
                 )
             );
 

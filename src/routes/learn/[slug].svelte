@@ -23,15 +23,14 @@
                     Object.entries(
                         import.meta.glob('/src/components/pages/*.svx')
                     ).map(async ([path, page]) => {
-                        const { default: Rendered } = await page();
                         const filename = path.split('/').pop();
                         const slug = filename.match(slugRegex)[1];
-                        return [slug, Rendered];
+                        return [slug, page];
                     })
                 )
             );
 
-            const Rendered = pages[slug];
+            const { default: Rendered } = await pages[slug]();
 
             return {
                 props: {

@@ -1,7 +1,6 @@
 <script>
     import '@fontsource/overpass/latin-ext-300.css';
     import '@fontsource/overpass/latin-ext-300-italic.css';
-    import '@fontsource/overpass/latin-ext-500.css';
     import '@fontsource/overpass/latin-ext-600.css';
     import '@fontsource/overpass/latin-ext-700.css';
     import '@fontsource/overpass/latin-ext-800.css';

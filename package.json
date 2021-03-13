@@ -35,8 +35,5 @@
         "tslib": "^2.1.0",
         "typescript": "^4.2.3",
         "vite": "^2.0.5"
-    },
-    "dependencies": {
-        "@fontsource/overpass": "^4.2.2"
     }
 }

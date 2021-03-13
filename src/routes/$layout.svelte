@@ -1,5 +1,4 @@
 <script>
-    import '@fontsource/overpass';
     import 'prismjs-tomorrow-theme/prism-tomorrow.css';
     import './_global.css';
     import { session } from '$app/stores';

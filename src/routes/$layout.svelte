@@ -19,7 +19,7 @@
                 class="uppercase text-2xl sm:text-3xl font-medium tracking-wider"
             >
                 <a href="/" class="inline-flex items-center">
-                    <img class="h-12 sm:h-16" alt="Logo" src="/logo.png" />
+                    <img class="h-12 w-12" alt="Logo" src="/logo.png" />
                     <span class="ml-1 pt-2 text-gray-700 whitespace-nowrap"
                         >SK Incognito</span
                     >

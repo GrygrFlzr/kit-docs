@@ -1,5 +1,10 @@
 <script>
-    import '@fontsource/overpass';
+    import '@fontsource/overpass/latin-ext-300.css';
+    import '@fontsource/overpass/latin-ext-300-italic.css';
+    import '@fontsource/overpass/latin-ext-500.css';
+    import '@fontsource/overpass/latin-ext-600.css';
+    import '@fontsource/overpass/latin-ext-700.css';
+    import '@fontsource/overpass/latin-ext-800.css';
     import 'prismjs-tomorrow-theme/prism-tomorrow.css';
     import './_global.css';
     import { session } from '$app/stores';

@@ -85,7 +85,7 @@ Let's extract the common wrapping element out of `src/routes/index.svelte`...
     </p>
 </Infobox>
 
-This should be familiar to Sapper users: `_layout.svelte` was just renamed to `$layout.svelte`. This means that the underscore prefix is finally consistent across all your routes; they'll be treated as private, ignored items.
+This should be familiar to Sapper users: `_layout.svelte` was just renamed to `__layout.svelte`. This means that the underscore prefix is finally consistent across all your routes; they'll be treated as private, ignored items.
 
 This all works without needing to write any JavaScript!
 

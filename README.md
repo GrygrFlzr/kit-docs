@@ -1,3 +1,5 @@
-# Unofficial Documentation for @sveltejs/kit
+# These docs have been deprecated
 
-This is an unofficial documentation for SvelteKit built on SvelteKit!
+Go to the officially maintained docs over at https://kit.svelte.dev instead.
+
+This repo remains only as a historical relic.
